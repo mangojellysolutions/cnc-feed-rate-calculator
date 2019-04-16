@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+	* {
+		box-sizing: border-box;
+	}
+
+	input[type=text], select, textarea {
+		width: 100%;
+		padding: 1em;
+		border: 0.1em solid #ccc;
+		border-radius: 0.4em;
+		resize: vertical;
+	}
+	select {
+		max-height: calc(4em);
+		height: calc(4em);
+	}
+/*
+max-height: calc(your line height + (top + bottom padding));
+height: calc(your line height + (top + bottom padding));
+*/
+	label {
+		padding: 1em 1em 1em 0;
+		display: inline-block;
+	}
+
+	input[type=button] {
+		background-color: #4CAF50;
+		color: white;
+		padding: 1em 2em;
+		border: none;
+		border-radius: 0.4em;
+		cursor: pointer;
+		float: right;
+	}
+
+	input[type=button]:hover {
+		background-color: #45a049;
+	}
+
+	.container {
+		border-radius: 0.4em;
+		background-color: #f2f2f2;
+		padding: 4em;
+	}
+
+	.col_1 {
+		float: left;
+		width: 25%;
+		margin-top: 0.5em;
+	}
+
+	.col_2 {
+		float: left;
+		width: 75%;
+		margin-top: 0.5em;
+	}
+	.col_3 {
+		float: left;
+		width: 100%;
+		margin-top: 0.5em;
+	}
+	/* Clear floats after the columns */
+	.row:after {
+		content: "";
+		display: table;
+		clear: both;
+	}
+
+	/* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+	@media screen and (max-width: 600px) {
+		.col_1, .col_2, input[type=button] {
+			width: 100%;
+			margin-top: 0;
+		}
+	}
+</style>
+<script>
+	const mmInAInch = 25.4;
+	const data = [
+		{
+			id: 'Hardwood',
+			unit: 'inch',
+			size: {
+				'0.125': [.003,.005],
+				'0.25' : [.009,.011],
+				'0.375' :[.015,.018],
+				'0.5'	:[.019,.021]
+			}
+		},
+		{
+			id: 'SoftWood',
+			unit: 'inch',
+			size: {
+				'0.125': [.004,.007],
+				'0.25':	[.011,.013],
+				'0.375' : [.017,.020],
+				'0.500' : [.021,.023]
+				}
+			},
+		{
+			id : 'MDF',
+			unit: 'inch',
+			size: {
+				'0.125': [.004, .007],
+				'0.25' : [.013, .016],
+				'0.375' : [.020,.023],
+				'0.5': [.025, .027]
+				}
+			},
+		{
+			id: 'HardPlastic',
+			unit: 'inch',
+			size: {
+				'0.125': [.002, .004],
+				'0.25': [.006, .009],
+				'0.375' : [.008, .010],
+				'0.5' : [.010, .012]
+			}
+		},
+		{
+			id: 'SoftPlastic',
+			unit: 'inch',
+			size: {
+				'0.125': [.003, .006],
+				'0.25': [.007, .010],
+				'0.375': [.010, .012],
+				'0.5': [.012, .016]
+				}
+			},
+		{
+			id:'Acrylic',
+			unit: 'inch',
+			size: {
+				'0.125': [.003, .005],
+				'0.25':	[.008, .010],
+				'0.375': [.010, .012],
+				'0.5': [.012, .015]
+			}
+		},
+		{
+			id: 'Aluminium',
+			unit: 'inch',
+			size: {
+				'0.125': [.003, .005],
+				'0.25' : [.005, .007],
+				'0.375': [.006, .008],
+				'0.5' : [.008, .010]
+			}
+		}
+	];
+
+	const rpmData = [10000, 12000, 17000, 22000, 27000, 30000];
+
+	const cutDepthReductionData = [1, 2, 4];
+	const unit = data[0].unit;
+
+	let calculate = () => {
+		let e = document.getElementById('noofteeth');
+		let noOfTeeth = e.options[e.selectedIndex].value;
+		e = document.getElementById('bitsize');
+		let bitSize = e.options[e.selectedIndex].value;
+		e = document.getElementById('material');
+		e = document.getElementById('toolrpm');
+		let rpm = e.options[e.selectedIndex].value;
+		e = document.getElementById('cutdepth');
+		let depthOfCut = e.options[e.selectedIndex].value;
+
+		//console.log(e);
+		let materialIdx = e.options[e.selectedIndex].value;
+		let materialData = null;
+		for(materialData of data){
+			if (materialData.id == materialIdx){
+				console.log(materialData);
+				break;
+			}
+		}
+		
+		let cptMin = materialData.size[bitSize][0];
+		let cptMax = materialData.size[bitSize][1];
+
+		if (unit == 'inch'){
+			cptMin = cptMin * mmInAInch;
+			cptMax = cptMax * mmInAInch;
+		}
+		
+		let feedRateMin = (noOfTeeth * cptMin * rpm)/depthOfCut;
+		let feedRateMax = (noOfTeeth * cptMax * rpm)/depthOfCut;
+		document.getElementById('minfeedrate').value = feedRateMin;
+		document.getElementById('maxfeedrate').value = feedRateMax;
+	}
+
+	const addOptionToSelect = (e, value, description) => {
+		let opt = document.createElement('option');
+		opt.value = value;
+		opt.innerHTML = description;
+		e.appendChild(opt);
+	}
+
+	let populateLookup = () => {
+
+		for(let material of data)
+			addOptionToSelect(document.getElementById('material'), material.id, material.id);
+
+		let sizes =  Object.getOwnPropertyNames(data[0].size);
+		for(let size of sizes)
+			addOptionToSelect(document.getElementById('bitsize'), size, Math.round(size * mmInAInch));
+	
+		for (let rpm of rpmData)
+			addOptionToSelect(document.getElementById('toolrpm'), rpm, rpm);
+
+		for (let i = 0; i < cutDepthReductionData.length; i++)
+			addOptionToSelect(document.getElementById('cutdepth'), cutDepthReductionData[i], (i+1) +'x diameter of tool');
+	} 
+</script>
+</head>
+<body>
+
+<div class="container">
+		<div class="row">
+			<div class="col_3">
+				<h2>Test</h2>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col_1">
+				<label>Bit Diameter</label>
+			</div>
+			<div class="col_2">
+				<select id="bitsize"></select>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col_1">
+				<label>No of Teeth/flutes</label>
+			</div>
+			<div class="col_2">
+				<select id="noofteeth"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col_1">
+				<label>Tool RPM</label>
+			</div>
+			<div class="col_2">
+				<select id="toolrpm"></select>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col_1">
+				<label>Material</label>
+			</div>
+			<div class="col_2">
+				<select id="material"></select>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col_1">
+				<label>Depth of Cut</label>
+			</div>
+			<div class="col_2">
+				<select id="cutdepth"></select>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col_3">
+				<input type="button" value="Calculate" onclick="calculate();" />
+			</div>
+		</div>
+		<div class="row">
+			<div class="col_3">
+				<hr />
+			</div>
+		</div>
+		<div class="row">
+			<div class="col_1">
+				Feed Rate (min)
+			</div>
+			<div class="col_2">
+					<input type="text" id="minfeedrate" value="" disabled/>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col_1">
+				Feed Rate (max)
+			</div>
+			<div class="col_2">
+					<input type="text" id="maxfeedrate" value="" disabled/>
+			</div>
+		</div>
+	</div>
+	<script>
+		populateLookup();
+	</script>
+</body>
+</html>
