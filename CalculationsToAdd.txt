@@ -1,0 +1,21 @@
+Step per mm
+$$
+
+Get the lead screw pitch
+
+Count the number of crests over one inch on the leadscrew to get no of crests (c) in my case 14
+Divide 1 inch by c to get the lead screw pitch in my case 1/14 = 0.07142857142 inch per rev
+
+Find out steps per inch
+Divide steps per revolution of motor by the lead screw pitch - in my case no of steps per rev = 200 so 200/0.0714 = 2801.12 steps per inch
+
+Convert to mm
+no of steps per inch * (1 inch / 25.4mm) in my case 2801.12 * (1/25.4) = 110.280 steps/mm (steps per mm)
+
+Multtiply the steps per mm by the microstepping configured on the board i.e x2 x4 x8 x16
+
+no of steps/mm * micro stepping - for me 110.280 steps/mm * 2 = 220.560
+
+GRBL x = $100 = 220.560
+	y = $101
+	z = $102 ???
